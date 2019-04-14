@@ -1,0 +1,57 @@
+version: '3.4'
+
+x-variables:
+  &variables
+  MYSQL_USER: stellarisen
+  MYSQL_PASSWORD: CHANGE_ME
+  MYSQL_DATABASE: stellarisen
+
+volumes:
+  www-data: {}
+  db-volume: {}
+
+services:
+  db:
+    image: mariadb:latest
+    restart: unless-stopped
+    volumes:
+      - db-volume:/var/lib/mysql
+      - ./stellarisen/database_scripts/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    environment:
+      <<: *variables
+      MYSQL_ROOT_PASSWORD: CHANGE_ME
+
+  composition:
+    build:
+      context: .
+      dockerfile: ./composer/Dockerfile
+    image: stellarisen-composer:latest
+    volumes:
+      - www-data:/var/www/stellarisen
+    environment:
+      <<: *variables
+      MYSQL_HOST: db
+
+  app:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - www-data:/var/www/html
+      - ./nginx/site.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - db
+      - composition
+      - engine
+    ports:
+      - 80:80
+
+  engine:
+    build:
+      context: .
+      dockerfile: ./php-fpm/Dockerfile
+    image: stellarisen-php
+    volumes:
+      - www-data:/var/www/html
+    depends_on:
+      - db
+      - composition

@@ -1,0 +1,11 @@
+*/.git*
+*Dockerfile
+*~
+*/.vagrant
+*/vagrantbox.zip
+*/Vagrantfile
+*/sethosts.sh
+*/puphpet/
+*/deployment_inside.sh
+*/database_scripts
+*/package-lock.json
